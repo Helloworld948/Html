@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Telugu Sambandham — Find Your Perfect Match</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Alpine.js -->
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700&family=Open+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: { DEFAULT: '#a84040', dark: '#8B0000', light: '#be7e80', soft: '#fff5f5' },
+                        gold: { DEFAULT: '#d4af37', light: '#f4d03f' },
+                    },
+                    fontFamily: {
+                        sans: ['Open Sans', 'sans-serif'],
+                        heading: ['Montserrat', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="bg-gradient-to-br from-brand-soft via-white to-rose-50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 text-slate-800 dark:text-slate-100 transition-colors duration-500 min-h-screen pb-24 md:pb-10"
+      x-data="appData()" x-init="initApp()">
+
+    <!-- Floating Background Shapes -->
+    <div class="fixed inset-0 overflow-hidden pointer-events-none">
+        <div class="floating-shape w-96 h-96 bg-brand-light top-0 -left-20 animate-pulse"></div>
+        <div class="floating-shape w-80 h-80 bg-rose-300 bottom-0 -right-20 animate-pulse" style="animation-delay: 1s;"></div>
+    </div>
+
+    <!-- ================= HEADER ================= -->
+    <header class="sticky top-0 z-40 glass-strong border-b border-slate-200/50 dark:border-slate-700/50 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <!-- Logo -->
+                <div class="flex items-center gap-2">
+                    <div class="w-8 h-8 bg-brand rounded-full flex items-center justify-center text-white font-bold text-lg">
+                        <i class="fas fa-heart"></i>
+                    </div>
+                    <span class="font-heading font-bold text-xl text-brand dark:text-white hidden sm:block">Telugu Sambandham</span>
+                    <span class="font-heading font-bold text-xl text-brand dark:text-white sm:hidden">TS</span>
+                </div>
+
+                <!-- Desktop Nav -->
+                <nav class="hidden md:flex items-center space-x-1">
+                    <a href="index.html" class="px-4 py-2 rounded-lg text-brand font-semibold bg-brand-soft dark:bg-brand/10 flex items-center gap-2">
+                        <i class="fas fa-home"></i> Home
+                    </a>
+                    <a href="matches.html" class="px-4 py-2 rounded-lg text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition flex items-center gap-2">
+                        <i class="fas fa-heart"></i> Matches
+                    </a>
+                    <a href="search.html" class="px-4 py-2 rounded-lg text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition flex items-center gap-2">
+                        <i class="fas fa-search"></i> Search
+                    </a>
+                    <a href="chat.html" class="px-4 py-2 rounded-lg text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition flex items-center gap-2 relative">
+                        <i class="fas fa-comment-dots"></i> Chat
+                        <span class="absolute -top-1 -right-1 w-4 h-4 bg-brand text-white text-[9px] font-bold rounded-full flex items-center justify-center">5</span>
+                    </a>
+                </nav>
+
+                <!-- Right Actions -->
+                <div class="flex items-center gap-2">
+                    <!-- Dark Mode Toggle -->
+                    <button @click="darkMode = !darkMode; document.documentElement.classList.toggle('dark')" 
+                            class="p-2 rounded-full hover:bg-slate-200 dark:hover:bg-slate-700 transition">
+                        <i class="fas" :class="darkMode ? 'fa-sun text-yellow-400' : 'fa-moon text-slate-600'"></i>
+                    </button>
+                    
+                    <!-- Notifications with Dropdown -->
+                    <div class="relative" x-data="{ openNotif: false }">
+                        <button @click="openNotif = !openNotif" class="relative p-2 rounded-full hover:bg-slate-200 dark:hover:bg-slate-700 transition">
+                            <i class="far fa-bell text-slate-600 dark:text-slate-300"></i>
+                            <span x-show="unreadNotifications > 0" class="absolute top-1 right-1 w-4 h-4 bg-brand text-white text-[9px] font-bold rounded-full flex items-center justify-center animate-bounce" x-text="unreadNotifications"></span>
+                        </button>
+
+                        <!-- Notification Panel (FIXED WIDTH FOR MOBILE) -->
+                        <div x-show="openNotif" @click.away="openNotif = false" x-transition
+                             class="notif-panel absolute right-0 mt-2 w-80 max-w-[calc(100vw-2rem)] glass-strong rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-700 overflow-hidden z-50">
+                            
+                            <!-- Header -->
+                            <div class="p-4 border-b border-slate-200 dark:border-slate-700 bg-gradient-to-r from-brand/5 to-brand-light/5">
+                                <div class="flex items-center justify-between">
+                                    <h3 class="font-heading font-bold text-lg text-slate-800 dark:text-white">Notifications</h3>
+                                    <button @click="markAllRead()" x-show="unreadNotifications > 0" class="text-xs text-brand hover:underline font-semibold">Mark all read</button>
+                                </div>
+                            </div>
+
+                            <!-- Notification List -->
+                            <div class="max-h-96 overflow-y-auto hide-scrollbar">
+                                <template x-if="notifications.length === 0">
+                                    <div class="p-8 text-center">
+                                        <i class="far fa-bell-slash text-4xl text-slate-300 dark:text-slate-600 mb-3"></i>
+                                        <p class="text-sm text-slate-500 dark:text-slate-400">No notifications yet</p>
+                                    </div>
+                                </template>
+
+                                <template x-for="notif in notifications" :key="notif.id">
+                                    <div class="notif-item p-4 border-b border-slate-100 dark:border-slate-800 cursor-pointer" 
+                                         :class="!notif.read ? 'notif-unread' : ''"
+                                         @click="handleNotificationClick(notif)">
+                                        <div class="flex gap-3">
+                                            <!-- Icon -->
+                                            <div class="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0"
+                                                 :class="{
+                                                     'bg-gradient-to-br from-pink-500 to-rose-600 text-white': notif.type === 'proposal',
+                                                     'bg-gradient-to-br from-blue-500 to-indigo-600 text-white': notif.type === 'message',
+                                                     'bg-gradient-to-br from-amber-500 to-orange-600 text-white': notif.type === 'view',
+                                                     'bg-gradient-to-br from-green-500 to-emerald-600 text-white': notif.type === 'match'
+                                                 }">
+                                                <i class="fas" :class="{
+                                                    'fa-heart': notif.type === 'proposal',
+                                                    'fa-comment-dots': notif.type === 'message',
+                                                    'fa-eye': notif.type === 'view',
+                                                    'fa-handshake': notif.type === 'match'
+                                                }"></i>
+                                            </div>
+
+                                            <!-- Content -->
+                                            <div class="flex-1 min-w-0">
+                                                <p class="text-sm font-semibold text-slate-800 dark:text-white mb-1" x-text="notif.title"></p>
+                                                <p class="text-xs text-slate-600 dark:text-slate-400 mb-2" x-text="notif.message"></p>
+                                                <div class="flex items-center justify-between">
+                                                    <span class="text-[10px] text-slate-400 dark:text-slate-500" x-text="notif.time"></span>
+                                                    <span x-show="!notif.read" class="w-2 h-2 rounded-full bg-brand"></span>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Action Buttons for Proposals -->
+                                        <div x-show="notif.type === 'proposal' && notif.status === 'pending'" class="flex gap-2 mt-3 ml-10">
+                                            <button @click.stop="acceptProposal(notif.id)" class="flex-1 py-1.5 bg-green-500 hover:bg-green-600 text-white text-xs font-bold rounded-lg transition">
+                                                <i class="fas fa-check mr-1"></i> Accept
+                                            </button>
+                                            <button @click.stop="rejectProposal(notif.id)" class="flex-1 py-1.5 bg-red-500 hover:bg-red-600 text-white text-xs font-bold rounded-lg transition">
+                                                <i class="fas fa-times mr-1"></i> Reject
+                                            </button>
+                                        </div>
+                                    </div>
+                                </template>
+                            </div>
+
+                            <!-- Footer -->
+                            <div class="p-3 border-t border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50">
+                                <a href="dashboard.html" class="block text-center text-sm font-semibold text-brand hover:underline">
+                                    View All Notifications
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- User Dropdown (Desktop) -->
+                    <div class="hidden md:block relative" x-data="{ open: false }">
+                        <button @click="open = !open" class="flex items-center gap-2 bg-brand text-white px-4 py-2 rounded-lg hover:shadow-lg transition">
+                            <i class="fas fa-user"></i> <span class="font-semibold">Mahesh</span>
+                        </button>
+                        <div x-show="open" @click.away="open = false" x-transition
+                             class="absolute right-0 mt-2 w-48 glass-strong rounded-xl shadow-2xl border border-slate-200 dark:border-slate-700 overflow-hidden z-50">
+                            <div class="p-2">
+                                <a href="me.html" class="block px-3 py-2 text-sm rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800"><i class="fas fa-user-circle w-5"></i> My Profile</a>
+                                <a href="dashboard.html" class="block px-3 py-2 text-sm rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800"><i class="fas fa-tachometer-alt w-5"></i> Dashboard</a>
+                                <a href="profile-security.html" class="block px-3 py-2 text-sm rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800"><i class="fas fa-cog w-5"></i> Settings</a>
+                            </div>
+                            <div class="p-2 border-t border-slate-200 dark:border-slate-700">
+                                <a href="#" class="block px-3 py-2 text-sm rounded-lg text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20"><i class="fas fa-sign-out-alt w-5"></i> Logout</a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Mobile Menu Button -->
+                    <button @click="mobileMenuOpen = true" class="md:hidden p-2 rounded-full hover:bg-slate-200 dark:hover:bg-slate-700 transition">
+                        <i class="fas fa-bars text-slate-600 dark:text-slate-300"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- ================= MOBILE MENU DRAWER ================= -->
+    <div x-show="mobileMenuOpen" class="fixed inset-0 z-50 md:hidden" x-transition.opacity>
+        <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" @click="mobileMenuOpen = false"></div>
+        <div class="absolute right-0 top-0 bottom-0 w-72 glass-strong p-6 animate-slide-up overflow-y-auto hide-scrollbar" @click.stop>
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-xl font-heading font-bold">Menu</h3>
+                <button @click="mobileMenuOpen = false" class="p-2 text-slate-500"><i class="fas fa-times text-xl"></i></button>
+            </div>
+            
+            <!-- User Card -->
+            <div class="p-4 rounded-2xl bg-gradient-to-br from-brand to-brand-dark text-white mb-6">
+                <div class="flex items-center gap-3">
+                    <div class="w-12 h-12 rounded-full bg-white/20 backdrop-blur flex items-center justify-center text-white font-bold text-xl">M</div>
+                    <div>
+                        <div class="font-bold">Mahesh Kumar</div>
+                        <div class="text-xs opacity-80">MAT144 • Gold Member</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Mobile Nav -->
+            <nav class="flex flex-col gap-1">
+                <a href="me.html" class="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200">
+                    <i class="fas fa-user w-5"></i> My Profile
+                </a>
+                <a href="dashboard.html" class="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200">
+                    <i class="fas fa-tachometer-alt w-5"></i> Dashboard
+                </a>
+                <a href="profile-security.html" class="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200">
+                    <i class="fas fa-cog w-5"></i> Settings
+                </a>
+                <div class="border-t border-slate-200 dark:border-slate-700 my-2"></div>
+                <a href="#" class="flex items-center gap-3 px-4 py-3 rounded-xl text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20">
+                    <i class="fas fa-sign-out-alt w-5"></i> Logout
+                </a>
+            </nav>
+        </div>
+    </div>
+
+    <!-- ================= MAIN CONTENT ================= -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-10">
+        
+        <!-- Page Header -->
+        <div class="text-center mb-8 animate-fade-in">
+            <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-brand-soft dark:bg-brand/10 text-brand text-xs font-semibold mb-3">
+                <span class="w-2 h-2 rounded-full bg-brand animate-pulse"></span>
+                <span x-text="totalRecords > 0 ? `${totalRecords} profiles available` : 'Discover amazing profiles'"></span>
+            </div>
+            <h1 class="text-3xl md:text-4xl font-heading font-bold mb-3">
+                Find Your <span class="gradient-text">Perfect Match</span>
+            </h1>
+            <p class="text-slate-500 dark:text-slate-400 max-w-2xl mx-auto">Swipe through curated profiles. Like, skip, or learn more — your journey to a lifetime of happiness starts here.</p>
+        </div>
+
+        <div class="flex flex-col lg:flex-row gap-6 items-start">
+            
+            <!-- ===== FILTERS SIDEBAR (Desktop) ===== -->
+            <aside class="hidden lg:block w-full lg:w-80 flex-shrink-0 sticky top-24">
+                <div class="glass rounded-2xl p-6 card-shadow">
+                    <div class="flex items-center justify-between mb-5">
+                        <h3 class="font-heading font-bold text-lg">Quick Filters</h3>
+                        <button @click="clearAllFilters()" x-show="hasActiveFilters" class="text-xs text-brand hover:underline font-semibold">Clear all</button>
+                    </div>
+                    
+                    <div class="space-y-6">
+                        <template x-for="(group, groupName) in filterGroups" :key="groupName">
+                            <div>
+                                <p class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3" x-text="group.label"></p>
+                                <div class="flex flex-wrap gap-2">
+                                    <template x-for="option in group.options" :key="option">
+                                        <button @click="toggleFilter(groupName, option)"
+                                                :class="filters[groupName].includes(option) ? 'bg-brand text-white shadow-md scale-105' : 'bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-600'"
+                                                class="px-4 py-2 rounded-full text-sm font-medium transition-all duration-200"
+                                                x-text="option"></button>
+                                    </template>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+
+                    <button x-show="hasActiveFilters" @click="clearAllFilters()" 
+                            class="w-full mt-6 py-2.5 text-sm font-semibold text-brand bg-rose-50 hover:bg-rose-100 dark:bg-rose-900/30 dark:hover:bg-rose-900/50 rounded-xl transition-colors">
+                        Clear All Filters
+                    </button>
+                </div>
+            </aside>
+
+            <!-- ===== MAIN CARD AREA ===== -->
+            <div class="flex-1 w-full flex flex-col items-center">
+                
+                <!-- Mobile Filter Toggle -->
+                <div class="lg:hidden w-full mb-4">
+                    <button @click="mobileFiltersOpen = true" class="w-full glass rounded-xl p-4 flex justify-between items-center font-semibold shadow-sm hover:shadow-md transition">
+                        <span class="flex items-center gap-2"><i class="fas fa-sliders-h text-brand"></i> Filter Profiles</span>
+                        <span class="flex items-center gap-2">
+                            <span x-show="hasActiveFilters" class="w-6 h-6 rounded-full bg-brand text-white text-xs flex items-center justify-center" x-text="activeFilterCount"></span>
+                            <i class="fas fa-chevron-down"></i>
+                        </span>
+                    </button>
+                </div>
+
+                <!-- Results Info Bar -->
+                <div x-show="!loading && userList.length > 0" x-transition class="glass rounded-xl px-5 py-3 mb-6 w-full max-w-md flex justify-between items-center text-sm card-shadow">
+                    <div class="flex items-center gap-2">
+                        <i class="fas fa-users text-brand"></i>
+                        <span class="text-slate-600 dark:text-slate-300">Showing <strong class="text-slate-900 dark:text-white" x-text="`${start}-${end}`"></strong> of <strong class="text-slate-900 dark:text-white" x-text="totalRecords"></strong></span>
+                    </div>
+                    <span class="text-brand font-bold bg-brand-soft dark:bg-brand/10 px-3 py-1 rounded-full text-xs">Page <span x-text="page"></span> of <span x-text="totalPages"></span></span>
+                </div>
+
+                <!-- ===== LOADING STATE (Skeleton) ===== -->
+                <div x-show="loading" x-transition class="w-full max-w-sm mx-auto">
+                    <div class="relative h-[550px] rounded-3xl overflow-hidden card-shadow bg-white dark:bg-slate-800">
+                        <div class="h-3/4 shimmer-bg"></div>
+                        <div class="absolute bottom-0 inset-x-0 p-6 bg-gradient-to-t from-black/80 to-transparent">
+                            <div class="h-7 shimmer-bg rounded w-3/4 mb-3"></div>
+                            <div class="h-4 shimmer-bg rounded w-1/2 mb-4"></div>
+                            <div class="flex gap-2">
+                                <div class="h-8 shimmer-bg rounded-full w-20"></div>
+                                <div class="h-8 shimmer-bg rounded-full w-20"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <p class="text-center text-slate-500 mt-4 text-sm"><i class="fas fa-spinner fa-spin mr-2"></i>Finding your perfect match...</p>
+                </div>
+
+                <!-- ===== EMPTY STATE ===== -->
+                <div x-show="!loading && userList.length === 0" x-transition class="text-center py-16 px-6 glass rounded-3xl max-w-md mx-auto card-shadow animate-bounce-in">
+                    <div class="w-24 h-24 bg-gradient-to-br from-brand-soft to-rose-100 dark:from-brand/20 dark:to-brand/10 rounded-full flex items-center justify-center mx-auto mb-4 animate-float">
+                        <i class="fas fa-search text-4xl text-brand"></i>
+                    </div>
+                    <h3 class="text-2xl font-heading font-bold mb-2">No matches found</h3>
+                    <p class="text-slate-500 dark:text-slate-400 mb-6">Try widening your filters to discover more amazing profiles.</p>
+                    <button @click="clearAllFilters()" class="px-6 py-3 bg-brand hover:bg-brand-dark text-white rounded-xl font-semibold shadow-lg transition-all transform hover:scale-105">
+                        <i class="fas fa-undo mr-2"></i>Clear Filters
+                    </button>
+                </div>
+
+                <!-- ===== PROFILE CARD STACK ===== -->
+                <div x-show="!loading && userList.length > 0 && currentCard < userList.length" x-transition class="relative w-full max-w-sm mx-auto h-[550px] md:h-[600px]">
+                    <template x-for="(profile, offset) in visibleProfiles" :key="profile.uid">
+                        <div class="absolute inset-0 rounded-3xl overflow-hidden card-shadow cursor-grab active:cursor-grabbing bg-white dark:bg-slate-800 transition-all duration-300 card-enter"
+                             :style="`transform: translateY(${(visibleProfiles.length - 1 - offset) * 8}px) scale(${1 - (visibleProfiles.length - 1 - offset) * 0.04}); z-index: ${offset + 1};`">
+                            
+                            <!-- Image -->
+                            <img :src="profile.image" class="w-full h-full object-cover object-top" :alt="profile.name">
+                            
+                            <!-- Gradient Overlay -->
+                            <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent"></div>
+                            
+                            <!-- Top Badges -->
+                            <div class="absolute top-3 left-3 right-3 flex justify-between items-start">
+                                <template x-if="profile.premium">
+                                    <div class="flex items-center gap-1 px-3 py-1.5 bg-gradient-to-r from-gold to-gold-light rounded-full shadow-lg">
+                                        <i class="fas fa-crown text-white text-xs"></i>
+                                        <span class="text-white text-xs font-bold">PREMIUM</span>
+                                    </div>
+                                </template>
+                                <template x-if="profile.online">
+                                    <div class="flex items-center gap-1.5 px-2.5 py-1 bg-green-500/90 backdrop-blur-sm rounded-full shadow-lg">
+                                        <span class="w-2 h-2 bg-white rounded-full online-dot"></span>
+                                        <span class="text-white text-[10px] font-bold">Online</span>
+                                    </div>
+                                </template>
+                            </div>
+
+                            <!-- Content -->
+                            <div class="absolute bottom-0 inset-x-0 p-6 text-white z-10">
+                                <h3 class="text-2xl md:text-3xl font-heading font-bold mb-1">
+                                    <span x-text="profile.name"></span>, <span x-text="profile.age"></span>
+                                    <i x-show="profile.verified" class="fas fa-check-circle text-green-400 text-sm ml-2"></i>
+                                </h3>
+                                <p class="text-white/90 text-sm flex items-center gap-2 mb-4">
+                                    <i class="fas fa-map-marker-alt text-brand-light"></i> 
+                                    <span x-text="`${profile.location}, ${profile.state}`"></span>
+                                </p>
+                                
+                                <!-- Tags -->
+                                <div class="flex flex-wrap gap-2 mb-5">
+                                    <span class="px-3 py-1.5 bg-white/20 backdrop-blur-md rounded-full text-xs font-semibold border border-white/30">
+                                        <i class="fas fa-briefcase mr-1"></i><span x-text="profile.job"></span>
+                                    </span>
+                                    <span class="px-3 py-1.5 bg-white/20 backdrop-blur-md rounded-full text-xs font-semibold border border-white/30">
+                                        <i class="fas fa-users mr-1"></i><span x-text="profile.caste"></span>
+                                    </span>
+                                </div>
+                                
+                                <!-- Action Buttons (Only on top card) -->
+                                <div x-show="offset === visibleProfiles.length - 1" class="flex justify-center gap-4">
+                                    <button @click.stop="skipCard(profile)" class="group w-14 h-14 rounded-full bg-white/20 backdrop-blur-md border-2 border-white/40 flex items-center justify-center hover:scale-110 hover:bg-white/30 transition-all shadow-lg">
+                                        <i class="fas fa-times text-white text-2xl group-hover:text-red-300 transition"></i>
+                                    </button>
+                                    <button @click.stop="viewProfile(profile)" class="w-12 h-12 rounded-full bg-white/20 backdrop-blur-md border-2 border-white/40 flex items-center justify-center hover:scale-110 hover:bg-white/30 transition-all shadow-lg">
+                                        <i class="fas fa-info text-white text-xl"></i>
+                                    </button>
+                                    <button @click.stop="likeCard(profile)" class="group w-14 h-14 rounded-full btn-primary border-2 border-brand-light flex items-center justify-center hover:scale-110 transition-all shadow-lg shadow-brand/50" style="background: linear-gradient(135deg, #a84040 0%, #8B0000 100%);">
+                                        <i class="fas fa-heart text-white text-2xl group-hover:scale-110 transition"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+
+                <!-- ===== ALL SEEN STATE ===== -->
+                <div x-show="!loading && currentCard >= userList.length && userList.length > 0" x-transition class="text-center py-12 px-6 glass rounded-3xl max-w-md mx-auto card-shadow animate-bounce-in">
+                    <div class="w-24 h-24 bg-gradient-to-br from-green-100 to-emerald-200 dark:from-green-900/30 dark:to-emerald-900/30 rounded-full flex items-center justify-center mx-auto mb-4 animate-float">
+                        <i class="fas fa-check-circle text-5xl text-green-600 dark:text-green-400"></i>
+                    </div>
+                    <h3 class="text-2xl font-heading font-bold mb-2">You've seen all profiles!</h3>
+                    <p class="text-slate-500 dark:text-slate-400 mb-6">Check back later for new matches or adjust your filters.</p>
+                    <div class="flex gap-3 justify-center flex-wrap">
+                        <button @click="resetCards()" class="px-6 py-3 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 rounded-xl font-semibold transition">
+                            <i class="fas fa-redo mr-2"></i>Start Over
+                        </button>
+                        <button @click="nextPage()" x-show="page < totalPages" class="px-6 py-3 bg-brand hover:bg-brand-dark text-white rounded-xl font-semibold shadow-lg transition">
+                            <i class="fas fa-arrow-right mr-2"></i>Next Page
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Keyboard Hint (Desktop only) -->
+                <p class="hidden lg:flex items-center gap-2 text-xs text-slate-400 mt-4">
+                    <kbd class="px-2 py-1 bg-slate-200 dark:bg-slate-700 rounded text-slate-600 dark:text-slate-300 font-mono">←</kbd>
+                    <kbd class="px-2 py-1 bg-slate-200 dark:bg-slate-700 rounded text-slate-600 dark:text-slate-300 font-mono">→</kbd>
+                    <span>Use arrow keys to swipe</span>
+                </p>
+
+                <!-- ===== PAGINATION ===== -->
+                <div x-show="totalPages > 1" class="flex gap-2 mt-8 flex-wrap justify-center">
+                    <button @click="page > 1 && goToPage(page - 1)" :disabled="page === 1" class="w-11 h-11 rounded-full border border-slate-300 dark:border-slate-600 flex items-center justify-center disabled:opacity-40 hover:bg-slate-100 dark:hover:bg-slate-700 transition bg-white dark:bg-slate-800">
+                        <i class="fas fa-chevron-left text-sm"></i>
+                    </button>
+                    <template x-for="p in visiblePages" :key="p">
+                        <button @click="goToPage(p)" :class="p === page ? 'bg-brand text-white shadow-lg' : 'border border-slate-300 dark:border-slate-600 hover:bg-slate-100 dark:hover:bg-slate-700 bg-white dark:bg-slate-800'"
+                                class="w-11 h-11 rounded-full font-semibold transition" x-text="p"></button>
+                    </template>
+                    <button @click="page < totalPages && goToPage(page + 1)" :disabled="page === totalPages" class="w-11 h-11 rounded-full border border-slate-300 dark:border-slate-600 flex items-center justify-center disabled:opacity-40 hover:bg-slate-100 dark:hover:bg-slate-700 transition bg-white dark:bg-slate-800">
+                        <i class="fas fa-chevron-right text-sm"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- ================= MOBILE FILTER DRAWER ================= -->
+    <div x-show="mobileFiltersOpen" class="fixed inset-0 z-50 lg:hidden" x-transition.opacity>
+        <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" @click="mobileFiltersOpen = false"></div>
+        <div class="absolute bottom-0 left-0 right-0 glass-strong rounded-t-3xl p-6 max-h-[85vh] overflow-y-auto animate-slide-up scrollbar-hide">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-xl font-heading font-bold">Filters</h3>
+                <button @click="mobileFiltersOpen = false" class="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-700 flex items-center justify-center"><i class="fas fa-times text-xl"></i></button>
+            </div>
+            
+            <div class="space-y-6">
+                <template x-for="(group, groupName) in filterGroups" :key="groupName">
+                    <div>
+                        <p class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3" x-text="group.label"></p>
+                        <div class="flex flex-wrap gap-2">
+                            <template x-for="option in group.options" :key="option">
+                                <button @click="toggleFilter(groupName, option)"
+                                        :class="filters[groupName].includes(option) ? 'bg-brand text-white shadow-md' : 'bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200'"
+                                        class="px-4 py-2.5 rounded-full text-sm font-medium transition-all duration-200"
+                                        x-text="option"></button>
+                            </template>
+                        </div>
+                    </div>
+                </template>
+            </div>
+
+            <div class="mt-6 pt-4 border-t border-slate-200 dark:border-slate-700 flex gap-3">
+                <button @click="clearAllFilters(); mobileFiltersOpen = false" x-show="hasActiveFilters" class="flex-1 py-3 bg-slate-100 dark:bg-slate-700 rounded-xl font-semibold transition">
+                    Clear All
+                </button>
+                <button @click="mobileFiltersOpen = false" class="flex-1 py-3 bg-brand text-white rounded-xl font-semibold shadow-lg">
+                    Apply Filters
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= MATCH MODAL ================= -->
+    <div x-show="showMatchModal" class="fixed inset-0 z-[60] flex items-center justify-center p-4" x-transition.opacity>
+        <div class="absolute inset-0 bg-black/80 backdrop-blur-md" @click="showMatchModal = false"></div>
+        <div class="relative glass-strong rounded-3xl p-8 max-w-sm w-full text-center animate-bounce-in">
+            <div class="absolute -top-10 left-1/2 transform -translate-x-1/2">
+                <div class="w-20 h-20 bg-gradient-to-br from-brand to-brand-dark rounded-full flex items-center justify-center shadow-2xl border-4 border-white dark:border-slate-800">
+                    <i class="fas fa-heart text-white text-3xl animate-pulse"></i>
+                </div>
+            </div>
+            <h3 class="text-2xl font-heading font-bold mt-8 mb-2 gradient-text">It's a Match!</h3>
+            <p class="text-slate-600 dark:text-slate-300 mb-6">You liked <strong x-text="lastLikedProfile"></strong>. Send a message to start the conversation!</p>
+            <div class="flex gap-3">
+                <button @click="showMatchModal = false" class="flex-1 py-3 bg-slate-100 dark:bg-slate-700 rounded-xl font-semibold transition">Keep Swiping</button>
+                <button @click="showMatchModal = false; showToast('Message feature coming soon!', 'info')" class="flex-1 py-3 bg-brand text-white rounded-xl font-semibold shadow-lg">Send Message</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= MOBILE BOTTOM NAV ================= -->
+    <nav class="md:hidden fixed bottom-0 inset-x-0 z-40 glass-strong border-t border-slate-200/50 dark:border-slate-700/50 shadow-[0_-4px_20px_rgba(0,0,0,0.05)] pb-safe">
+        <div class="flex justify-around items-center h-16 max-w-md mx-auto px-2">
+            <a href="index.html" class="nav-item nav-item-active flex flex-col items-center gap-1 py-2 px-3">
+                <i class="fas fa-home text-xl transition-transform"></i>
+                <span class="text-[10px] font-semibold">Home</span>
+            </a>
+            <a href="matches.html" class="nav-item flex flex-col items-center gap-1 py-2 px-3 text-slate-400">
+                <i class="fas fa-heart text-xl transition-transform"></i>
+                <span class="text-[10px] font-medium">Matches</span>
+            </a>
+            <a href="search.html" class="nav-item flex flex-col items-center gap-1 py-2 px-3 text-slate-400">
+                <i class="fas fa-search text-xl transition-transform"></i>
+                <span class="text-[10px] font-medium">Search</span>
+            </a>
+            <a href="chat.html" class="nav-item flex flex-col items-center gap-1 py-2 px-3 text-slate-400 relative">
+                <i class="fas fa-comment-dots text-xl transition-transform"></i>
+                <span class="absolute top-0 right-1 w-4 h-4 bg-brand text-white text-[9px] font-bold rounded-full flex items-center justify-center">5</span>
+                <span class="text-[10px] font-medium">Chat</span>
+            </a>
+            <a href="me.html" class="nav-item flex flex-col items-center gap-1 py-2 px-3 text-slate-400">
+                <i class="fas fa-user text-xl transition-transform"></i>
+                <span class="text-[10px] font-medium">Me</span>
+            </a>
+        </div>
+    </nav>
+
+    <!-- ================= TOAST NOTIFICATIONS ================= -->
+    <div class="fixed top-20 right-4 z-50 flex flex-col gap-3 max-w-sm">
+        <template x-for="toast in toasts" :key="toast.id">
+            <div class="toast-enter glass-strong rounded-2xl p-4 shadow-2xl border-l-4 flex items-start gap-3"
+                 :class="{
+                     'border-green-500': toast.type === 'success',
+                     'border-red-500': toast.type === 'error',
+                     'border-yellow-500': toast.type === 'warning',
+                     'border-blue-500': toast.type === 'info'
+                 }">
+                <i class="fas text-xl" :class="{
+                    'fa-check-circle text-green-500': toast.type === 'success',
+                    'fa-times-circle text-red-500': toast.type === 'error',
+                    'fa-exclamation-triangle text-yellow-500': toast.type === 'warning',
+                    'fa-info-circle text-blue-500': toast.type === 'info'
+                }"></i>
+                <div class="flex-1">
+                    <div class="font-bold text-sm" x-text="toast.title"></div>
+                    <div class="text-xs text-slate-600 dark:text-slate-300 mt-0.5" x-text="toast.message"></div>
+                </div>
+                <button @click="removeToast(toast.id)" class="text-slate-400 hover:text-slate-600"><i class="fas fa-times"></i></button>
+            </div>
+        </template>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
